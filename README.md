@@ -1,7 +1,7 @@
 - 👋 Hi, I’m @jweisgerber625
 - 👀 I’m interested in ... Other coding languages to create API's
 - 🌱 I’m currently learning ... Java code to create API's
-- 💞️ I’m looking to collaborate on ... Anything related to healcare IT via python
+- 💞️ I’m looking to collaborate on ... Anything related to healthcare IT via python
 - 📫 How to reach me ... jweisgerber625@gmail.com
 
 <!---
