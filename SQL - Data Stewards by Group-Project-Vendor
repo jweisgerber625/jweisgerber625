@@ -1,0 +1,22 @@
+# Utilizing joins to gather specific data to see what setwards belong to what groups/projects/vendors.
+# Remove leading dashes ("--") in front of criteria in the WHERE clause to utilize that criteria. 
+# If you use multiple criteria, you will need to use operators such as "AND" and/or "OR".
+
+SELECT DISTINCT otm.cerner_mnemonics
+    ,ds.tenantId
+    ,dss.sourceid
+    ,stew.email DataStewardEmail
+FROM hei_dmdatasetspecs dss
+INNER JOIN hei_dmdatasources ds ON dss.sourceid = ds.sourceid
+INNER JOIN hei_dmdatastewards stew ON dss.sourceid = stew.sourceid
+INNER JOIN di_filetracking_history_data ftd ON dss.sourceid = ftd.sourceid
+    AND dss.datasetid = ftd.datasetid
+    AND dss.specversion = ftd.specversion --Ensures a file has landed in HDFS under these configurations
+INNER JOIN HEI_DMDATASOURCEVENDORS v ON v.sourceId = dss.sourceId
+LEFT JOIN hei_odwtenantmnemonics otm ON ds.tenantid = otm.tenantid
+WHERE
+    --  dss.mappingjarrepogroup iLIKE '%cigna%'
+    --  dss.mappingjarrepoproject iLIKE '%cigna_cac%'
+    --  v.sourceVendor iLIKE '%CMS%'
+    v.sourceVendorProduct iLIKE '%CCLF%'
+ORDER BY 1,2
