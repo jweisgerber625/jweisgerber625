@@ -1,0 +1,27 @@
+# Utilizing the split_part to compare jar in JSON against HDFS with different types of joins for a specified project.
+
+SELECT DISTINCT 
+ otm.cerner_mnemonics 
+ , dss.sourceid 
+ , dss.datasetid 
+ , dss.effdt
+ , CASE 
+ WHEN REPLACE(SPLIT_PART(SPLIT_PART(dss.mappingjarurl,'/',15),'-',2),'.jar','') < REPLACE(SPLIT_PART(SPLIT_PART(MAX(CASE WHEN hp.propertyname = 'mappingJar' THEN hp.propertyvalue end),'/',5),'-',2),'.jar','') THEN 'DSS < HDFS'
+ WHEN REPLACE(SPLIT_PART(SPLIT_PART(dss.mappingjarurl,'/',15),'-',2),'.jar','') = REPLACE(SPLIT_PART(SPLIT_PART(MAX(CASE WHEN hp.propertyname = 'mappingJar' THEN hp.propertyvalue end),'/',5),'-',2),'.jar','') THEN 'DSS = HDFS'
+ WHEN REPLACE(SPLIT_PART(SPLIT_PART(dss.mappingjarurl,'/',15),'-',2),'.jar','') > REPLACE(SPLIT_PART(SPLIT_PART(MAX(CASE WHEN hp.propertyname = 'mappingJar' THEN hp.propertyvalue end),'/',5),'-',2),'.jar','') THEN 'DSS > HDFS'
+ WHEN SPLIT_PART(MAX(CASE WHEN hp.propertyname = 'mappingJar' THEN hp.propertyvalue end),'/',5) IS NULL THEN 'DSS - jar missing' 
+ WHEN MAX(CASE WHEN hp.propertyname = 'mappingJar' THEN hp.propertyvalue end) IS NULL THEN 'HDFS - jar missing'
+ END JARVersionComparison
+ , SPLIT_PART(dss.mappingjarurl,'/',15) DSS_JAR 
+ , SPLIT_PART(MAX(CASE WHEN hp.propertyname = 'mappingJar' THEN hp.propertyvalue end),'/',5) HDFS_JAR
+ , dss.mappingjarurl DSS_mappingJar
+ , MAX(CASE WHEN hp.propertyname = 'mappingJar' THEN hp.propertyvalue end) HDFS_mappingJar 
+FROM 
+ hei_dmdatasetspecs dss 
+ LEFT JOIN hei_dmdatasources ds ON dss.sourceid = ds.sourceid 
+ LEFT JOIN hei_odwtenantmnemonics otm ON ds.tenantid = otm.tenantid 
+ FULL JOIN HEI_HDFSPROPERTIES hp ON dss.sourceid = hp.sourceid and dss.datasetid = hp.datasetid and dss.specversion = hp.specversion 
+WHERE 
+ dss.mappingjarrepoproject ILIKE '%HEI_UNIV%' 
+GROUP BY 1,2,3,4,6,8
+ORDER BY 1,4
