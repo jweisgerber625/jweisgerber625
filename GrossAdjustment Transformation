@@ -1,0 +1,88 @@
+# This script grabs current time and date stamp using datetime library, grabs a specified file from a directory, adds a header to it from a specified file in a directory,
+# writes the file to a specified directory, then replaces "," with "|", then uses our upload utility to send file to our platform.
+
+import urllib
+import json
+import re
+import subprocess
+import os
+from datetime import datetime
+from pprint import pprint
+
+
+runDT=str(datetime.now().date())
+runDTTM=str(datetime.now().date())+' '+str(datetime.now().time())
+
+
+###DEFINE ORIGINAL FILE###
+originalFileLoc = "Z:\\Montana\\MMIS\\MMIS_Gross_Adjustment\\"
+fileName = os.listdir("Z:\\Montana\\MMIS\\MMIS_Gross_Adjustment\\")
+for newFile in fileName:
+	if str("grossadjustment") in newFile:
+		originalFileName = newFile
+		originalFile = originalFileLoc+originalFileName
+		release = originalFileName.lower().replace(".txt","")[-8:][:8]
+		break
+#print(newFile)
+print("File path to original file = " +originalFile)
+print("Release = " +release)
+
+
+###DEFINE OUTPUT FILE###
+outputFileLoc = 'Z:\\Montana\\MMIS\\MMIS_Gross_Adjustment\\archive\\'
+outputFileName = originalFileName
+outputFile = outputFileLoc+outputFileName
+
+
+###DEFINE HEADER FILE###
+headerFileLoc = outputFileLoc
+headerFileName = 'grossadjust_header.txt'
+
+
+###SET HEADER RECORD IN VARIABLE
+headerFile = open(headerFileLoc + headerFileName,'r')
+for headerFileRow in headerFile:
+	if len(headerFileRow) > 0:
+		headerRecord = headerFileRow
+		break
+##CLOSE HEADER FILE
+headerFile.close
+
+
+###WRITE OUTPUT FILE
+with open(originalFile,'r') as originalFileOpen, open(outputFile,'w') as outputFileOpen:
+##WRITE FILE HEADER
+	outputFileOpen.write(headerRecord+"\n")
+##WRITE FILE BODY
+	for line in originalFileOpen:
+		outputFileOpen.write(line.replace(',','|'))
+originalFileOpen.close
+
+
+#HIDUU the file to EDW
+HIDUU_Command=[]
+HIDUU_Command.append('Z:\\Montana\\hi-data-upload-utility-1.7-USZONE1\\bin\\hi-data-upload-utility.bat')
+HIDUU_Command.append('uploadDataSetFile')
+HIDUU_Command.append('-said')
+HIDUU_Command.append('1121b2ad-ba96-4678-b850-dd7f71e769ba')
+HIDUU_Command.append('-sas')
+HIDUU_Command.append('T0DSXJN0gdinsrWBhkaiiAbFctLXf2MC')
+HIDUU_Command.append('-sid')
+HIDUU_Command.append('1121b2ad-ba96-4678-b850-dd7f71e769ba')
+HIDUU_Command.append('-dsid')
+HIDUU_Command.append('GROSSADJUSTMENT')
+HIDUU_Command.append('-fid')
+HIDUU_Command.append('SINGLE_FILE')
+HIDUU_Command.append('-rl')
+HIDUU_Command.append(release)
+HIDUU_Command.append('-sv')
+HIDUU_Command.append('1')
+HIDUU_Command.append('-cm')
+HIDUU_Command.append('mtdphhs')
+HIDUU_Command.append('-f')
+filepath='Z:\\Montana\\MMIS\\MMIS_Gross_Adjustment\\archive\\'+str(outputFileName)
+HIDUU_Command.append(filepath)
+print(filepath)
+p = subprocess.Popen(HIDUU_Command, stdout=subprocess.PIPE)
+output, err=p.communicate()
+print("***Running Direct to Vertica HIDUU Command***\n", output)
