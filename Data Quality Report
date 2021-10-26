@@ -1,0 +1,89 @@
+# This script grabs a specified file from a directory and runs it through a series of quality tests and outputs a quality report text file in a specified directory.
+
+import datetime
+import time
+import re
+
+file = "Z:\\Montana\\CHIMES\\CHIMES_Hist_File\\TMSIS_Historical_Elig_Extract_20190412.txt"
+newFile = file[17:]
+#print(newFile)
+
+#--> Create list of years from 1920 to current in string format
+findDate = map(str, range(1920, datetime.datetime.now().year + 1))
+#print(findDate)
+
+count = 0
+headerRow = ""
+dataRow = ""
+colInfo = {}  #--> dict object to store column information in as we iterate over the file
+regex = re.compile(r"\w")
+
+#--> Open up the source file and get everything we need in a single pass
+with open(file) as inputfile:
+	for line in inputfile:
+		#--> Grab the (assumed) header row
+		if count == 0:
+			headerRow = line
+		#--> Grab the (assumed) first row of actual data
+		if count == 1:
+			dataRow = line
+		
+		#--> Iterate over the data (skipping row index 0 assuming it's a header)
+		if count >= 1:
+			columns = line.split("|")
+			if len(columns) > 1:
+				for colNum, colData in enumerate(columns):
+					#--> Build out a new column index record in our dictionary object if it's something we haven't seen before
+					if str(colNum) not in colInfo:
+						colInfo[str(colNum)] = {"maxLen":0, "dateCount":0, "alphaCount":0, "numericCount":0, "alphaNumCount":0, "emptyCount":0, "varCharCount":0}
+					
+					#--> Test to see if this column length is larger than our previous high score for the column index.
+					if len(colData) > colInfo[str(colNum)]["maxLen"]:
+						colInfo[str(colNum)]["maxLen"] = len(colData)
+						
+					#--> Test to see if the value in the column is a date
+					colSplit = colData.split("/")
+					if colData.strip() == "":
+						colInfo[str(colNum)]["emptyCount"] += 1
+					elif len(colSplit) == 3 and colSplit[2] in findDate:
+						colInfo[str(colNum)]["dateCount"] += 1
+					elif colData.isdigit():
+						colInfo[str(colNum)]["numericCount"] += 1
+					elif colData.isalpha():
+						colInfo[str(colNum)]["alphaCount"] += 1
+					elif colData.isalnum():
+						colInfo[str(colNum)]["alphaNumCount"] += 1
+					elif regex.search(colData) is not None:
+						colInfo[str(colNum)]["varCharCount"] += 1
+					else:
+						print("Could not determine column data type.  Value: "+colData)
+		count += 1
+
+
+#--> Open output file to write results to and write the header level information
+f = open("Z:\\Montana\\CCUBS\\Output_DQR_2.txt", "w+")
+f.write("File name is: ")
+f.write(str(newFile)+"\n")
+f.write("---------------------------------------------------------------------------------------------------------------------------------------\n")
+f.write("Number of rows in the file: ")
+f.write(str(count)+"\n")
+f.write("---------------------------------------------------------------------------------------------------------------------------------------\n")
+f.write("Header row is: \n")
+f.write(str(headerRow)+"\n")
+f.write("---------------------------------------------------------------------------------------------------------------------------------------\n")
+f.write("First row of sample data is: \n")
+f.write(str(dataRow)+"\n")
+f.write("---------------------------------------------------------------------------------------------------------------------------------------\n\n")
+
+#--> Loop through the dictionary object to pull down the counters for each column  
+for colIndex in map(str, (sorted(map(int, colInfo.keys())))):
+	f.write("Column "+colIndex+" max precision: "+str(colInfo[colIndex]["maxLen"])+"\n")
+	f.write("Column "+colIndex+" empty count: "+str(colInfo[colIndex]["emptyCount"])+"\n")
+	f.write("Column "+colIndex+" date count: "+str(colInfo[colIndex]["dateCount"])+"\n")
+	f.write("Column "+colIndex+" numeric-only count: "+str(colInfo[colIndex]["numericCount"])+"\n")
+	f.write("Column "+colIndex+" alpha-only count: "+str(colInfo[colIndex]["alphaCount"])+"\n")
+	f.write("Column "+colIndex+" alpha-numeric count: "+str(colInfo[colIndex]["alphaNumCount"])+"\n")
+	f.write("Column "+colIndex+" varchar count: "+str(colInfo[colIndex]["varCharCount"])+"\n")
+	f.write("-------------------------------------------------------------------\n")
+
+f.close()
