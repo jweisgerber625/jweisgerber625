@@ -1,0 +1,12 @@
+# Utilizing split_part to access a specific portion of a URL.
+
+SELECT DISTINCT
+    dss.source_id
+    ,dss.dataset_id
+    ,split_part(dss.mapping_jar_url, '/', 15) JAR
+    ,dss.dataset_spec_deploy
+    ,dss.mapping_jar_url
+    ,dss.mapping_jar_repo_project
+FROM DI_DS_DATASET_ATTRIBUTE dss
+WHERE dss.dataset_spec_deploy  = 'False'
+    AND dss.mapping_jar_repo_project iLIKE '%hei_univ%' 
