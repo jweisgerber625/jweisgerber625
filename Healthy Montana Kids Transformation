@@ -1,0 +1,89 @@
+# This script utilizes the datetime librabry to pull in release for upload command. We look for a string within a scpecified directory to grab a file. We define an
+# output directory for the file, attach the correct header to the file, replace "/t" with "|" for delimiter, then upload direct to our analytics plaform using our 
+# upload utility.
+
+import urllib
+import json
+import re
+import subprocess
+import os
+from datetime import datetime
+from pprint import pprint
+
+
+runDT=str(datetime.now().date())
+runDTTM=str(datetime.now().date())+' '+str(datetime.now().time())
+
+
+###DEFINE ORIGINAL FILE###
+originalFileLoc = "Z:\\Montana\\HMK\\Providers\\"
+fileName = os.listdir("Z:\\Montana\\HMK\\Providers\\")
+for newFile in fileName:
+	if str("BMT_WEEKLY_PROVIDER_DATA_EXTRACT") in newFile:
+		originalFileName = newFile
+		originalFile = originalFileLoc+originalFileName
+		release = originalFileName.lower().replace(".txt","")[-12:][:8]
+		break
+#print(newFile)
+print("File path to original file = " +originalFile)
+print("Release = " +release)
+
+
+###DEFINE OUTPUT FILE###
+outputFileLoc = 'Z:\\Montana\\HMK\\Providers\\Delimited Versions\\'
+outputFileName = originalFileName
+outputFile = outputFileLoc+outputFileName
+
+
+###DEFINE HEADER FILE###
+headerFileLoc = outputFileLoc
+headerFileName = 'header.txt'
+
+
+###SET HEADER RECORD IN VARIABLE
+headerFile = open(headerFileLoc + headerFileName,'r')
+for headerFileRow in headerFile:
+	if len(headerFileRow) > 0:
+		headerRecord = headerFileRow
+		break
+##CLOSE HEADER FILE
+headerFile.close
+
+
+###WRITE OUTPUT FILE
+with open(originalFile,'r') as originalFileOpen, open(outputFile,'w') as outputFileOpen:
+##WRITE FILE HEADER
+	outputFileOpen.write(headerRecord+"\n")
+##WRITE FILE BODY
+	for line in originalFileOpen:
+		outputFileOpen.write(line.replace('\t','|'))
+originalFileOpen.close
+
+
+#HIDUU the file to EDW
+HIDUU_Command=[]
+HIDUU_Command.append('Z:\\Montana\\hi-data-upload-utility-1.6-USZONE1\\bin\\hi-data-upload-utility.bat')
+HIDUU_Command.append('uploadDataSetFile')
+HIDUU_Command.append('-said')
+HIDUU_Command.append('<INSERT SYS ACCOUNT ID>')
+HIDUU_Command.append('-sas')
+HIDUU_Command.append('<INSERT SYS ACCOUNT SECRET>')
+HIDUU_Command.append('-sid')
+HIDUU_Command.append('<INSERT SOURCE ID>')
+HIDUU_Command.append('-dsid')
+HIDUU_Command.append('<INSERT DATASET ID>')
+HIDUU_Command.append('-fid')
+HIDUU_Command.append('SINGLE_FILE')
+HIDUU_Command.append('-rl')
+HIDUU_Command.append(release)
+HIDUU_Command.append('-sv')
+HIDUU_Command.append('1')
+HIDUU_Command.append('-cm')
+HIDUU_Command.append('mtdphhs')
+HIDUU_Command.append('-f')
+filepath='Z:\\Montana\\HMK\\Providers\\Delimited Versions\\'+str(outputFileName)
+HIDUU_Command.append(filepath)
+print(filepath)
+p = subprocess.Popen(HIDUU_Command, stdout=subprocess.PIPE)
+output, err=p.communicate()
+print("***Running Direct to Vertica HIDUU Command***\n", output)
