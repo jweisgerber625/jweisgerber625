@@ -1,0 +1,13 @@
+# Utilizing split_part to view ceratin portion of the URL.
+
+SELECT DISTINCT
+    otm.cerner_mnemonics
+    ,dss.source_id
+    ,dss.dataset_id
+    ,split_part(dss.mapping_jar_url, '/', 15) JAR
+    ,dss.mapping_jar_url
+FROM DI_DS_DATASET_ATTRIBUTE dss
+LEFT JOIN DI_DS_DATA_SOURCE ds ON dss.source_id = ds.source_id
+LEFT JOIN hei_odwtenantmnemonics otm ON ds.tenant_id = otm.tenantid
+WHERE dss.mapping_jar_repo_project ILIKE '%HEI_UNIV_ALLERGY_V2%'
+ORDER BY 1, 2, 3, 4, 5
