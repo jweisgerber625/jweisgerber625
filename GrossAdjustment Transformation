@@ -1,5 +1,5 @@
 # This script grabs current time and date stamp using datetime library, grabs a specified file from a directory, adds a header to it from a specified file in a directory,
-# writes the file to a specified directory, then replaces "," with "|", then uses our upload utility to send file to our platform.
+# writes the file to a specified directory, then replaces "," with "|" for delimiter, then uses our upload utility to send the file to our analytics platform.
 
 import urllib
 import json
