@@ -1,0 +1,17 @@
+# This script was created with IntelliJ. This is the main 4 data types (INT, DOUBLE, CHAR, BOOLEAN) in java and how to print them to the console.
+
+public class Main {
+    public static void main(String[] args) {
+        int studentAge = 15;
+        double studentGPA = 3.45;
+        char studentFirstInitial = 'J';
+        char studentLastInitial = 'W';
+        boolean hasPerfectAttendance = true;
+
+        System.out.println(studentAge);
+        System.out.println(studentGPA);
+        System.out.println(studentFirstInitial);
+        System.out.println(studentLastInitial);
+        System.out.println(hasPerfectAttendance);
+    }
+}
