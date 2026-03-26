@@ -1,0 +1,15 @@
+import re
+
+def wrap_in_quotes(text):
+    return re.sub(r'\(([^)]*)\)', r'"(\1)"', text)
+
+input_file = 'input.csv'
+output_file = 'output.csv'
+
+with open(input_file, 'r', encoding='utf-8') as infile, \
+     open(output_file, 'w', encoding='utf-8') as outfile:
+    for line in infile:
+        processed_line = wrap_in_quotes(line)
+        outfile.write(processed_line)
+
+print(f"Processing complete. Results saved to {output_file}")
