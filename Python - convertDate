@@ -1,0 +1,25 @@
+import re
+from datetime import datetime
+
+input_path = r"C:\Users\Justin\Desktop\Python\input_file.txt"
+output_path = r"C:\Users\Justin\Desktop\Python\output_file.txt"
+
+def convert_date(match):
+    original_date = match.group()
+    date_obj = datetime.strptime(original_date, "%m/%d/%Y")
+    return date_obj.strftime("%d-%b-%y")
+
+with open(input_path, "r", encoding="utf-8") as infile:
+    content = infile.read()
+
+# Find and convert all MM/DD/YYYY dates
+converted_content = re.sub(
+    r"\b\d{2}/\d{2}/\d{4}\b",
+    convert_date,
+    content
+)
+
+with open(output_path, "w", encoding="utf-8") as outfile:
+    outfile.write(converted_content)
+
+print("Date conversion completed successfully.")
