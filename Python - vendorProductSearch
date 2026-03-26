@@ -1,0 +1,47 @@
+import json
+import subprocess
+
+
+def get_last_git_commit_hash(file_path):
+    try:
+        result = subprocess.run(
+            ["git", "log", "-1", "--pretty=format:%H", file_path],
+            capture_output=True,
+            text=True,
+            check=True
+        )
+        return result.stdout.strip()
+    except subprocess.CalledProcessError:
+        return "Unknown"
+
+
+def find_all_vendors_without_dash(json_data, commit_hash):
+    results = []
+
+    for entry in json_data:
+        vendors = entry.get("vendors", [])
+        data_sources = entry.get("data_sources")
+
+        for vendor in vendors:
+            if isinstance(vendor, str) and "-" not in vendor:
+                results.append({
+                    "vendor": vendor,
+                    "data_sources": data_sources,
+                    "last_commit_hash": commit_hash
+                })
+
+    return results
+
+
+if __name__ == "__main__":
+    file_path = "input.json"
+
+    commit_hash = get_last_git_commit_hash(file_path)
+
+    with open(file_path, "r") as f:
+        data = json.load(f)
+
+    results = find_all_vendors_without_dash(data, commit_hash)
+
+    for item in results:
+        print(item)
