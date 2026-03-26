@@ -1,0 +1,13 @@
+input_path = r"C:\Users\Justin\Desktop\Python\input_file.txt"
+output_path = r"C:\Users\Justin\Desktop\Python\output_file.txt"
+
+with open(input_path, "r", encoding="utf-8") as infile:
+    content = infile.read()
+
+# Remove the timestamp
+cleaned_content = content.replace(" 0:00", "")
+
+with open(output_path, "w", encoding="utf-8") as outfile:
+    outfile.write(cleaned_content)
+
+print("Timestamps removed successfully.")
